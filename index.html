@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
   <title>Sum It</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -596,18 +596,26 @@
 
     // Add new row
     function addRow() {
-      rows.push({
+      const newRow = {
         id: nextId++,
         comment: '',
         math: ''
-      });
+      };
+      
+      rows.push(newRow);
       saveState();
       render();
       
-      // Focus the comment input of the new row
-      const newInput = rowsContainer.querySelector(`[data-id="${rows[rows.length - 1].id}"] .comment-input`);
+      const newInput = rowsContainer.querySelector(`[data-id="${newRow.id}"] .comment-input`);
       if (newInput) {
-        newInput.focus();
+        // Focus triggers the mobile keyboard
+        newInput.focus({ preventScroll: true });
+        
+        // Wait for the mobile keyboard animation to finish before scrolling
+        // 400ms is a sweet spot that allows iOS/Android to finish resizing the viewport
+        setTimeout(() => {
+          newInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 400);
       }
     }
 
