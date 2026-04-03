@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sum It</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d1117;
+      --bg-elevated: #161b22;
+      --fg: #e6edf3;
+      --muted: #7d8590;
+      --accent: #58a6ff;
+      --accent-glow: rgba(88, 166, 255, 0.15);
+      --success: #3fb950;
+      --border: #30363d;
+      --danger: #f85149;
+      --card: #21262d;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      font-size: 16px;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      min-height: 100dvh;
+      line-height: 1.5;
+      padding: 16px;
+      padding-bottom: env(safe-area-inset-bottom, 16px);
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+      animation: fadeSlideDown 0.4s ease-out;
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--fg);
+    }
+
+    .header p {
+      font-size: 0.875rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* Rows Container */
+    .rows-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 80px;
+    }
+
+    /* Row */
+    .row {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      animation: rowEnter 0.3s ease-out backwards;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .row:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .row-content {
+      display: grid;
+      grid-template-columns: 1fr 40%;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .comment-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .comment-label {
+      font-size: 0.625rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+    }
+
+    .comment-input {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.875rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--fg);
+      padding: 10px 12px;
+      width: 100%;
+      transition: border-color 0.15s ease;
+    }
+
+    .comment-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .comment-input::placeholder {
+      color: var(--muted);
+    }
+
+    .math-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .math-label {
+      font-size: 0.625rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+    }
+
+    .math-input {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1rem;
+      font-weight: 600;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--success);
+      padding: 10px 12px;
+      width: 100%;
+      text-align: right;
+      transition: border-color 0.15s ease;
+    }
+
+    .math-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .math-input::placeholder {
+      color: var(--muted);
+    }
+
+    .math-error {
+      font-size: 0.6875rem;
+      color: var(--danger);
+      display: none;
+    }
+
+    .math-error.visible {
+      display: block;
+      animation: shake 0.3s ease;
+    }
+
+    /* Row Footer */
+    .row-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .row-result {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+
+    .row-result span {
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    .delete-btn {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 6px;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .delete-btn:hover {
+      background: rgba(248, 81, 73, 0.1);
+      color: var(--danger);
+    }
+
+    .delete-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* Add Button */
+    .add-btn {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 600;
+      padding: 12px 32px;
+      border-radius: 100px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 20px rgba(88, 166, 255, 0.3);
+      transition: all 0.2s ease;
+      animation: fadeSlideUp 0.4s ease-out 0.2s backwards;
+      z-index: 10;
+    }
+
+    .add-btn:hover {
+      transform: translateX(-50%) scale(1.02);
+      box-shadow: 0 6px 24px rgba(88, 166, 255, 0.4);
+    }
+
+    .add-btn:active {
+      transform: translateX(-50%) scale(0.98);
+    }
+
+    .add-btn:focus-visible {
+      outline: 2px solid var(--fg);
+      outline-offset: 2px;
+    }
+
+    /* Total Bar */
+    .total-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-elevated);
+      border-top: 1px solid var(--border);
+      padding: 20px 16px;
+      padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+      animation: fadeSlideUp 0.4s ease-out 0.1s backwards;
+    }
+
+    .total-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .total-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+    }
+
+    .total-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--success);
+      letter-spacing: -0.02em;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--muted);
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    .empty-state svg {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .empty-state p {
+      font-size: 0.875rem;
+    }
+
+    /* Animations */
+    @keyframes fadeSlideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeSlideUp {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes rowEnter {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-4px); }
+      75% { transform: translateX(4px); }
+    }
+
+    /* Reduced Motion */
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* Tablet Up */
+    @media (min-width: 600px) {
+      body {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 32px;
+      }
+
+      .header h1 {
+        font-size: 1.75rem;
+      }
+
+      .row-content {
+        grid-template-columns: 1fr 35%;
+      }
+
+      .total-bar {
+        border-radius: var(--radius) var(--radius) 0 0;
+        max-width: 600px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <h1>Sum It</h1>
+    <p>Quick math, zero friction</p>
+  </header>
+
+  <main class="rows-container" id="rowsContainer" role="list" aria-label="Calculation rows">
+    <!-- Rows injected here -->
+  </main>
+
+  <button class="add-btn" id="addBtn" aria-label="Add new row">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+      <line x1="12" y1="5" x2="12" y2="19"></line>
+      <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
+    Add Row
+  </button>
+
+  <footer class="total-bar" role="status" aria-live="polite">
+    <div class="total-content">
+      <span class="total-label">Total</span>
+      <span class="total-value" id="totalValue">0</span>
+    </div>
+  </footer>
+
+  <script>
+    // State
+    let rows = [];
+    let nextId = 1;
+
+    // DOM References (initialized after DOM ready)
+    let rowsContainer = null;
+    let totalValueEl = null;
+    let addBtn = null;
+
+    // Storage helpers
+    const STORAGE_KEY = 'sum-it-rows';
+    
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ rows, nextId }));
+      } catch (e) {
+        // Storage unavailable, continue without persistence
+      }
+    }
+
+    function loadState() {
+      try {
+        const data = localStorage.getItem(STORAGE_KEY);
+        if (data) {
+          const parsed = JSON.parse(data);
+          rows = Array.isArray(parsed.rows) ? parsed.rows : [];
+          nextId = typeof parsed.nextId === 'number' ? parsed.nextId : 1;
+        }
+      } catch (e) {
+        // Corrupted data, start fresh
+        rows = [];
+        nextId = 1;
+      }
+    }
+
+    // Safe math expression evaluator (only supports + - * / and numbers)
+    function evaluateMath(expression) {
+      if (!expression || expression.trim() === '') {
+        return { value: 0, error: false };
+      }
+
+      // Sanitize: only allow digits, decimal points, operators, parentheses, and spaces
+      const sanitized = expression.replace(/\s+/g, '');
+      const safePattern = /^[\d+\-*/().]+$/;
+      
+      if (!safePattern.test(sanitized)) {
+        return { value: 0, error: true };
+      }
+
+      // Additional validation: ensure proper structure
+      let balance = 0;
+      for (const char of sanitized) {
+        if (char === '(') balance++;
+        if (char === ')') balance--;
+        if (balance < 0) return { value: 0, error: true };
+      }
+      if (balance !== 0) return { value: 0, error: true };
+
+      try {
+        // Use Function constructor with restricted scope
+        const result = new Function('"use strict"; return (' + sanitized + ')')();
+        
+        if (typeof result !== 'number' || !isFinite(result)) {
+          return { value: 0, error: true };
+        }
+        
+        return { value: result, error: false };
+      } catch (e) {
+        return { value: 0, error: true };
+      }
+    }
+
+    // Format number for display
+    function formatNumber(num) {
+      if (Math.abs(num) >= 1000000) {
+        return num.toExponential(2);
+      }
+      // Use max 4 decimal places, trim trailing zeros
+      return parseFloat(num.toFixed(4)).toLocaleString('en-US', { maximumFractionDigits: 4 });
+    }
+
+    // Calculate total
+    function calculateTotal() {
+      return rows.reduce((sum, row) => {
+        const result = evaluateMath(row.math);
+        return sum + (result.error ? 0 : result.value);
+      }, 0);
+    }
+
+    // Render empty state
+    function renderEmptyState() {
+      return `
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            <line x1="12" y1="6" x2="12" y2="12"></line>
+            <line x1="9" y1="9" x2="15" y2="9"></line>
+          </svg>
+          <p>Add your first row to start summing</p>
+        </div>
+      `;
+    }
+
+    // Render single row HTML
+    function renderRow(row, index) {
+      const result = evaluateMath(row.math);
+      const errorClass = result.error && row.math ? 'visible' : '';
+      
+      return `
+        <article class="row" data-id="${row.id}" role="listitem" style="animation-delay: ${index * 0.05}s">
+          <div class="row-content">
+            <div class="comment-wrapper">
+              <label class="comment-label" for="comment-${row.id}">Comment</label>
+              <input 
+                type="text" 
+                class="comment-input" 
+                id="comment-${row.id}"
+                placeholder="e.g. Groceries"
+                value="${escapeHtml(row.comment)}"
+                data-field="comment"
+                aria-describedby="math-error-${row.id}"
+              />
+            </div>
+            <div class="math-wrapper">
+              <label class="math-label" for="math-${row.id}">Math</label>
+              <input 
+                type="text" 
+                class="math-input" 
+                id="math-${row.id}"
+                placeholder="12.5 + 3"
+                value="${escapeHtml(row.math)}"
+                data-field="math"
+                inputmode="text"
+                aria-describedby="math-error-${row.id}"
+              />
+              <span class="math-error ${errorClass}" id="math-error-${row.id}">Invalid expression</span>
+            </div>
+          </div>
+          <div class="row-footer">
+            <div class="row-result">= <span>${formatNumber(result.value)}</span></div>
+            <button class="delete-btn" aria-label="Delete row" data-action="delete">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            </button>
+          </div>
+        </article>
+      `;
+    }
+
+    // Escape HTML to prevent XSS
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str || '';
+      return div.innerHTML;
+    }
+
+    // Render all rows
+    function render() {
+      if (!rowsContainer || !totalValueEl) return;
+
+      if (rows.length === 0) {
+        rowsContainer.innerHTML = renderEmptyState();
+      } else {
+        rowsContainer.innerHTML = rows.map((row, i) => renderRow(row, i)).join('');
+      }
+      
+      totalValueEl.textContent = formatNumber(calculateTotal());
+    }
+
+    // Add new row
+    function addRow() {
+      rows.push({
+        id: nextId++,
+        comment: '',
+        math: ''
+      });
+      saveState();
+      render();
+      
+      // Focus the comment input of the new row
+      const newInput = rowsContainer.querySelector(`[data-id="${rows[rows.length - 1].id}"] .comment-input`);
+      if (newInput) {
+        newInput.focus();
+      }
+    }
+
+    // Delete row
+    function deleteRow(id) {
+      rows = rows.filter(row => row.id !== id);
+      saveState();
+      render();
+    }
+
+    // Update row field
+    function updateRow(id, field, value) {
+      const row = rows.find(r => r.id === id);
+      if (row) {
+        row[field] = value;
+        saveState();
+        
+        // Only re-render if math changed (to update the result)
+        if (field === 'math') {
+          const rowEl = rowsContainer.querySelector(`[data-id="${id}"]`);
+          const result = evaluateMath(value);
+          const resultEl = rowEl.querySelector('.row-result span');
+          const errorEl = rowEl.querySelector('.math-error');
+          
+          resultEl.textContent = formatNumber(result.value);
+          
+          if (result.error && value) {
+            errorEl.classList.add('visible');
+          } else {
+            errorEl.classList.remove('visible');
+          }
+          
+          totalValueEl.textContent = formatNumber(calculateTotal());
+        }
+      }
+    }
+
+    // Event handlers
+    function handleContainerClick(e) {
+      const deleteBtn = e.target.closest('[data-action="delete"]');
+      if (deleteBtn) {
+        const row = deleteBtn.closest('.row');
+        if (row) {
+          const id = parseInt(row.dataset.id, 10);
+          deleteRow(id);
+        }
+      }
+    }
+
+    function handleContainerInput(e) {
+      const input = e.target;
+      if (input.dataset.field) {
+        const row = input.closest('.row');
+        if (row) {
+          const id = parseInt(row.dataset.id, 10);
+          updateRow(id, input.dataset.field, input.value);
+        }
+      }
+    }
+
+    // Initialize app
+    function init() {
+      // Get DOM references
+      rowsContainer = document.getElementById('rowsContainer');
+      totalValueEl = document.getElementById('totalValue');
+      addBtn = document.getElementById('addBtn');
+
+      if (!rowsContainer || !totalValueEl || !addBtn) {
+        console.error('Required DOM elements not found');
+        return;
+      }
+
+      // Load saved state
+      loadState();
+
+      // Attach event listeners
+      addBtn.addEventListener('click', addRow);
+      rowsContainer.addEventListener('click', handleContainerClick);
+      rowsContainer.addEventListener('input', handleContainerInput);
+
+      // Initial render
+      render();
+    }
+
+    // Start app when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  </script>
+</body>
+</html>
