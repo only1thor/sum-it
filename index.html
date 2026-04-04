@@ -160,7 +160,8 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
-      margin-bottom: 80px;
+      /* Increased bottom margin to clear the fixed footer bar */
+      margin-bottom: 90px; 
     }
 
     /* Row */
@@ -312,63 +313,94 @@
       outline-offset: 2px;
     }
 
-    /* Add Button */
-    .add-btn {
-      position: fixed;
-      bottom: 100px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--accent);
-      color: var(--bg);
-      border: none;
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 0.875rem;
-      font-weight: 600;
-      padding: 12px 32px;
-      border-radius: 100px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 4px 20px rgba(88, 166, 255, 0.3);
-      transition: all 0.2s ease;
-      animation: fadeSlideUp 0.4s ease-out 0.2s backwards;
-      z-index: 10;
-    }
-
-    .add-btn:hover {
-      transform: translateX(-50%) scale(1.02);
-      box-shadow: 0 6px 24px rgba(88, 166, 255, 0.4);
-    }
-
-    .add-btn:active {
-      transform: translateX(-50%) scale(0.98);
-    }
-
-    .add-btn:focus-visible {
-      outline: 2px solid var(--fg);
-      outline-offset: 2px;
-    }
-
-    /* Total Bar */
-    .total-bar {
+    /* Unified Bottom Bar (Total + Add) */
+    .bottom-bar {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
       background: var(--bg-elevated);
       border-top: 1px solid var(--border);
-      padding: 20px 16px;
-      padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-      animation: fadeSlideUp 0.4s ease-out 0.1s backwards;
-    }
-
-    .total-content {
+      padding: 16px;
+      padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+      
       display: flex;
       justify-content: space-between;
+      align-items: center;
+      
+      z-index: 20;
+      animation: slideUp 0.3s ease-out;
+    }
+    
+    @media (min-width: 600px) {
+        .bottom-bar {
+            max-width: 600px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-top-left-radius: var(--radius);
+            border-top-right-radius: var(--radius);
+            border-top: 1px solid var(--border); /* Re-apply for rounded corners */
+        }
+        
+        @keyframes slideUp {
+          from { 
+              opacity: 0; 
+              transform: translateX(-50%) translateY(10px); 
+          }
+          to { 
+              opacity: 1; 
+              transform: translateX(-50%) translateY(0); 
+          }
+        }
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Add Button (Integrated into Footer) */
+    .add-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--fg);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .add-btn:hover {
+      background: var(--card);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .add-btn:active {
+      transform: scale(0.97);
+    }
+
+    .add-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .add-btn svg {
+      color: var(--accent);
+    }
+
+    /* Total Section (Right Aligned in Footer) */
+    .total-section {
+      display: flex;
       align-items: baseline;
-      max-width: 600px;
-      margin: 0 auto;
+      gap: 12px;
     }
 
     .total-label {
@@ -381,10 +413,12 @@
 
     .total-value {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 1.75rem;
+      font-size: 1.5rem;
       font-weight: 700;
       color: var(--success);
       letter-spacing: -0.02em;
+      min-width: 60px;
+      text-align: right;
     }
 
     /* Empty State */
@@ -408,25 +442,8 @@
 
     /* Animations */
     @keyframes fadeSlideDown {
-      from {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @keyframes fadeSlideUp {
-      from {
-        opacity: 0;
-        transform: translateX(-50%) translateY(10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-      }
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     @keyframes fadeIn {
@@ -435,14 +452,8 @@
     }
 
     @keyframes rowEnter {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     @keyframes shake {
@@ -453,9 +464,7 @@
 
     /* Reduced Motion */
     @media (prefers-reduced-motion: reduce) {
-      *,
-      *::before,
-      *::after {
+      *, *::before, *::after {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
@@ -476,13 +485,6 @@
 
       .row-content {
         grid-template-columns: 1fr 35%;
-      }
-
-      .total-bar {
-        border-radius: var(--radius) var(--radius) 0 0;
-        max-width: 600px;
-        left: 50%;
-        transform: translateX(-50%);
       }
     }
   </style>
@@ -520,16 +522,19 @@
     <!-- Rows injected here -->
   </main>
 
-  <button class="add-btn" id="addBtn" aria-label="Add new row">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-      <line x1="12" y1="5" x2="12" y2="19"></line>
-      <line x1="5" y1="12" x2="19" y2="12"></line>
-    </svg>
-    Add Row
-  </button>
+  <!-- Unified Footer -->
+  <footer class="bottom-bar" role="status" aria-live="polite">
+    <!-- Left: Add Button -->
+    <button class="add-btn" id="addBtn" aria-label="Add new row">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+      Add
+    </button>
 
-  <footer class="total-bar" role="status" aria-live="polite">
-    <div class="total-content">
+    <!-- Right: Total -->
+    <div class="total-section">
       <span class="total-label">Total</span>
       <span class="total-value" id="totalValue">0</span>
     </div>
@@ -573,7 +578,6 @@
           rows = Array.isArray(parsed.rows) ? parsed.rows : [];
           nextId = typeof parsed.nextId === 'number' ? parsed.nextId : 1;
           
-          // Load sort preferences with fallbacks
           if (['added', 'alpha', 'value'].includes(parsed.sortBy)) {
             sortBy = parsed.sortBy;
             if (sortSelect) sortSelect.value = sortBy;
@@ -584,7 +588,6 @@
           }
         }
       } catch (e) {
-        // Corrupted data, start fresh
         rows = [];
         nextId = 1;
       }
@@ -664,7 +667,6 @@
 
         case 'added':
         default:
-          // Sort by ID (which represents creation order)
           sorted.sort((a, b) => (a.id - b.id) * dir);
           break;
       }
@@ -828,7 +830,7 @@
     // Handle sort change
     function handleSortChange(e) {
       sortBy = e.target.value;
-      updateOrderToggleUI(); // Reset visual state if needed
+      updateOrderToggleUI();
       saveState();
       render();
     }
@@ -878,7 +880,6 @@
         return;
       }
 
-      // Load saved state (populates sort UI)
       loadState();
 
       // Attach event listeners
@@ -894,7 +895,6 @@
         orderToggle.addEventListener('click', handleOrderToggle);
       }
 
-      // Initial render
       render();
     }
 
