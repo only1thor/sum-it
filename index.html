@@ -47,7 +47,7 @@
     /* Header */
     .header {
       text-align: center;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
       animation: fadeSlideDown 0.4s ease-out;
     }
 
@@ -62,6 +62,97 @@
       font-size: 0.875rem;
       color: var(--muted);
       margin-top: 4px;
+    }
+
+    /* Sort Bar */
+    .sort-bar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      margin-bottom: 24px;
+      animation: fadeSlideDown 0.4s ease-out 0.05s backwards;
+    }
+
+    .sort-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .sort-select-wrapper {
+      position: relative;
+      flex: 1;
+    }
+
+    .sort-select {
+      width: 100%;
+      appearance: none;
+      -webkit-appearance: none;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--fg);
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.875rem;
+      padding: 8px 32px 8px 12px;
+      cursor: pointer;
+      transition: border-color 0.15s ease;
+    }
+
+    .sort-select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .select-arrow {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      color: var(--muted);
+      width: 14px;
+      height: 14px;
+    }
+
+    .order-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--muted);
+      width: 36px;
+      height: 34px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .order-toggle:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .order-toggle:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .order-toggle svg {
+      transition: transform 0.2s ease;
+    }
+
+    .order-toggle.desc svg {
+      transform: rotate(180deg);
     }
 
     /* Rows Container */
@@ -402,6 +493,29 @@
     <p>Quick math, zero friction</p>
   </header>
 
+  <!-- Sort Controls -->
+  <div class="sort-bar" role="toolbar" aria-label="Sort options">
+    <span class="sort-label">Sort</span>
+    
+    <div class="sort-select-wrapper">
+      <select id="sortSelect" class="sort-select" aria-label="Sort by">
+        <option value="added">Added</option>
+        <option value="alpha">Alphabetical</option>
+        <option value="value">Row Total</option>
+      </select>
+      <svg class="select-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+    </div>
+
+    <button id="orderToggle" class="order-toggle desc" aria-label="Toggle sort direction (descending)" title="Toggle Ascending/Descending">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="19" x2="12" y2="5"></line>
+        <polyline points="5 12 12 5 19 12"></polyline>
+      </svg>
+    </button>
+  </div>
+
   <main class="rows-container" id="rowsContainer" role="list" aria-label="Calculation rows">
     <!-- Rows injected here -->
   </main>
@@ -425,18 +539,27 @@
     // State
     let rows = [];
     let nextId = 1;
+    let sortBy = 'added'; // 'added' | 'alpha' | 'value'
+    let sortOrder = 'desc'; // 'asc' | 'desc'
 
     // DOM References (initialized after DOM ready)
     let rowsContainer = null;
     let totalValueEl = null;
     let addBtn = null;
+    let sortSelect = null;
+    let orderToggle = null;
 
     // Storage helpers
     const STORAGE_KEY = 'sum-it-rows';
     
     function saveState() {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ rows, nextId }));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ 
+          rows, 
+          nextId,
+          sortBy,
+          sortOrder 
+        }));
       } catch (e) {
         // Storage unavailable, continue without persistence
       }
@@ -449,6 +572,16 @@
           const parsed = JSON.parse(data);
           rows = Array.isArray(parsed.rows) ? parsed.rows : [];
           nextId = typeof parsed.nextId === 'number' ? parsed.nextId : 1;
+          
+          // Load sort preferences with fallbacks
+          if (['added', 'alpha', 'value'].includes(parsed.sortBy)) {
+            sortBy = parsed.sortBy;
+            if (sortSelect) sortSelect.value = sortBy;
+          }
+          if (['asc', 'desc'].includes(parsed.sortOrder)) {
+            sortOrder = parsed.sortOrder;
+            updateOrderToggleUI();
+          }
         }
       } catch (e) {
         // Corrupted data, start fresh
@@ -457,13 +590,12 @@
       }
     }
 
-    // Safe math expression evaluator (only supports + - * / and numbers)
+    // Safe math expression evaluator
     function evaluateMath(expression) {
       if (!expression || expression.trim() === '') {
         return { value: 0, error: false };
       }
 
-      // Sanitize: only allow digits, decimal points, operators, parentheses, and spaces
       const sanitized = expression.replace(/\s+/g, '');
       const safePattern = /^[\d+\-*/().]+$/;
       
@@ -471,7 +603,6 @@
         return { value: 0, error: true };
       }
 
-      // Additional validation: ensure proper structure
       let balance = 0;
       for (const char of sanitized) {
         if (char === '(') balance++;
@@ -481,7 +612,6 @@
       if (balance !== 0) return { value: 0, error: true };
 
       try {
-        // Use Function constructor with restricted scope
         const result = new Function('"use strict"; return (' + sanitized + ')')();
         
         if (typeof result !== 'number' || !isFinite(result)) {
@@ -499,7 +629,6 @@
       if (Math.abs(num) >= 1000000) {
         return num.toExponential(2);
       }
-      // Use max 4 decimal places, trim trailing zeros
       return parseFloat(num.toFixed(4)).toLocaleString('en-US', { maximumFractionDigits: 4 });
     }
 
@@ -509,6 +638,51 @@
         const result = evaluateMath(row.math);
         return sum + (result.error ? 0 : result.value);
       }, 0);
+    }
+
+    // Sort rows based on current settings
+    function getSortedRows() {
+      const sorted = [...rows];
+      const dir = sortOrder === 'asc' ? 1 : -1;
+
+      switch (sortBy) {
+        case 'alpha':
+          sorted.sort((a, b) => {
+            const aText = (a.comment || '').toLowerCase();
+            const bText = (b.comment || '').toLowerCase();
+            return aText.localeCompare(bText) * dir;
+          });
+          break;
+
+        case 'value':
+          sorted.sort((a, b) => {
+            const aVal = evaluateMath(a.math).error ? 0 : evaluateMath(a.math).value;
+            const bVal = evaluateMath(b.math).error ? 0 : evaluateMath(b.math).value;
+            return (aVal - bVal) * dir;
+          });
+          break;
+
+        case 'added':
+        default:
+          // Sort by ID (which represents creation order)
+          sorted.sort((a, b) => (a.id - b.id) * dir);
+          break;
+      }
+
+      return sorted;
+    }
+
+    // Update order toggle button UI
+    function updateOrderToggleUI() {
+      if (!orderToggle) return;
+      
+      if (sortOrder === 'asc') {
+        orderToggle.classList.remove('desc');
+        orderToggle.setAttribute('aria-label', 'Toggle sort direction (ascending)');
+      } else {
+        orderToggle.classList.add('desc');
+        orderToggle.setAttribute('aria-label', 'Toggle sort direction (descending)');
+      }
     }
 
     // Render empty state
@@ -532,7 +706,7 @@
       const errorClass = result.error && row.math ? 'visible' : '';
       
       return `
-        <article class="row" data-id="${row.id}" role="listitem" style="animation-delay: ${index * 0.05}s">
+        <article class="row" data-id="${row.id}" role="listitem" style="animation-delay: ${index * 0.03}s">
           <div class="row-content">
             <div class="comment-wrapper">
               <label class="comment-label" for="comment-${row.id}">Comment</label>
@@ -585,10 +759,12 @@
     function render() {
       if (!rowsContainer || !totalValueEl) return;
 
-      if (rows.length === 0) {
+      const sortedRows = getSortedRows();
+
+      if (sortedRows.length === 0) {
         rowsContainer.innerHTML = renderEmptyState();
       } else {
-        rowsContainer.innerHTML = rows.map((row, i) => renderRow(row, i)).join('');
+        rowsContainer.innerHTML = sortedRows.map((row, i) => renderRow(row, i)).join('');
       }
       
       totalValueEl.textContent = formatNumber(calculateTotal());
@@ -608,11 +784,8 @@
       
       const newInput = rowsContainer.querySelector(`[data-id="${newRow.id}"] .comment-input`);
       if (newInput) {
-        // Focus triggers the mobile keyboard
         newInput.focus({ preventScroll: true });
         
-        // Wait for the mobile keyboard animation to finish before scrolling
-        // 400ms is a sweet spot that allows iOS/Android to finish resizing the viewport
         setTimeout(() => {
           newInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }, 400);
@@ -633,7 +806,6 @@
         row[field] = value;
         saveState();
         
-        // Only re-render if math changed (to update the result)
         if (field === 'math') {
           const rowEl = rowsContainer.querySelector(`[data-id="${id}"]`);
           const result = evaluateMath(value);
@@ -651,6 +823,22 @@
           totalValueEl.textContent = formatNumber(calculateTotal());
         }
       }
+    }
+
+    // Handle sort change
+    function handleSortChange(e) {
+      sortBy = e.target.value;
+      updateOrderToggleUI(); // Reset visual state if needed
+      saveState();
+      render();
+    }
+
+    // Handle order toggle
+    function handleOrderToggle() {
+      sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+      updateOrderToggleUI();
+      saveState();
+      render();
     }
 
     // Event handlers
@@ -682,19 +870,29 @@
       rowsContainer = document.getElementById('rowsContainer');
       totalValueEl = document.getElementById('totalValue');
       addBtn = document.getElementById('addBtn');
+      sortSelect = document.getElementById('sortSelect');
+      orderToggle = document.getElementById('orderToggle');
 
       if (!rowsContainer || !totalValueEl || !addBtn) {
         console.error('Required DOM elements not found');
         return;
       }
 
-      // Load saved state
+      // Load saved state (populates sort UI)
       loadState();
 
       // Attach event listeners
       addBtn.addEventListener('click', addRow);
       rowsContainer.addEventListener('click', handleContainerClick);
       rowsContainer.addEventListener('input', handleContainerInput);
+      
+      if (sortSelect) {
+        sortSelect.addEventListener('change', handleSortChange);
+      }
+      
+      if (orderToggle) {
+        orderToggle.addEventListener('click', handleOrderToggle);
+      }
 
       // Initial render
       render();
