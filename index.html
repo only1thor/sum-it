@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, interactive-widget=resizes-content">
   <title>Sum It</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,6 +31,7 @@
 
     html {
       font-size: 16px;
+      -webkit-text-size-adjust: 100%;
     }
 
     body {
@@ -44,7 +45,6 @@
       padding-bottom: env(safe-area-inset-bottom, 16px);
     }
 
-    /* Header */
     .header {
       text-align: center;
       margin-bottom: 20px;
@@ -64,7 +64,6 @@
       margin-top: 4px;
     }
 
-    /* Sort Bar */
     .sort-bar {
       display: flex;
       gap: 10px;
@@ -100,7 +99,7 @@
       border-radius: var(--radius-sm);
       color: var(--fg);
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 0.875rem;
+      font-size: 16px;
       padding: 8px 32px 8px 12px;
       cursor: pointer;
       transition: border-color 0.15s ease;
@@ -155,16 +154,13 @@
       transform: rotate(180deg);
     }
 
-    /* Rows Container */
     .rows-container {
       display: flex;
       flex-direction: column;
       gap: 12px;
-      /* Increased bottom margin to clear the fixed footer bar */
       margin-bottom: 90px; 
     }
 
-    /* Row */
     .row {
       background: var(--card);
       border: 1px solid var(--border);
@@ -202,7 +198,7 @@
 
     .comment-input {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 0.875rem;
+      font-size: 16px;
       background: var(--bg);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
@@ -237,7 +233,7 @@
 
     .math-input {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 1rem;
+      font-size: 16px;
       font-weight: 600;
       background: var(--bg);
       border: 1px solid var(--border);
@@ -269,7 +265,6 @@
       animation: shake 0.3s ease;
     }
 
-    /* Row Footer */
     .row-footer {
       display: flex;
       justify-content: space-between;
@@ -313,7 +308,6 @@
       outline-offset: 2px;
     }
 
-    /* Unified Bottom Bar (Total + Add) */
     .bottom-bar {
       position: fixed;
       bottom: 0;
@@ -339,7 +333,7 @@
             transform: translateX(-50%);
             border-top-left-radius: var(--radius);
             border-top-right-radius: var(--radius);
-            border-top: 1px solid var(--border); /* Re-apply for rounded corners */
+            border-top: 1px solid var(--border);
         }
         
         @keyframes slideUp {
@@ -359,13 +353,12 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Add Button (Integrated into Footer) */
     .add-btn {
       background: transparent;
       border: 1px solid var(--border);
       color: var(--fg);
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 0.875rem;
+      font-size: 16px;
       font-weight: 600;
       padding: 10px 18px;
       border-radius: var(--radius-sm);
@@ -396,7 +389,6 @@
       color: var(--accent);
     }
 
-    /* Total Section (Right Aligned in Footer) */
     .total-section {
       display: flex;
       align-items: baseline;
@@ -421,7 +413,6 @@
       text-align: right;
     }
 
-    /* Empty State */
     .empty-state {
       text-align: center;
       padding: 48px 24px;
@@ -440,7 +431,6 @@
       font-size: 0.875rem;
     }
 
-    /* Animations */
     @keyframes fadeSlideDown {
       from { opacity: 0; transform: translateY(-10px); }
       to { opacity: 1; transform: translateY(0); }
@@ -462,7 +452,6 @@
       75% { transform: translateX(4px); }
     }
 
-    /* Reduced Motion */
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 0.01ms !important;
@@ -471,7 +460,6 @@
       }
     }
 
-    /* Tablet Up */
     @media (min-width: 600px) {
       body {
         max-width: 600px;
@@ -495,7 +483,6 @@
     <p>Quick math, zero friction</p>
   </header>
 
-  <!-- Sort Controls -->
   <div class="sort-bar" role="toolbar" aria-label="Sort options">
     <span class="sort-label">Sort</span>
     
@@ -519,12 +506,9 @@
   </div>
 
   <main class="rows-container" id="rowsContainer" role="list" aria-label="Calculation rows">
-    <!-- Rows injected here -->
   </main>
 
-  <!-- Unified Footer -->
   <footer class="bottom-bar" role="status" aria-live="polite">
-    <!-- Left: Add Button -->
     <button class="add-btn" id="addBtn" aria-label="Add new row">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
         <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -533,7 +517,6 @@
       Add
     </button>
 
-    <!-- Right: Total -->
     <div class="total-section">
       <span class="total-label">Total</span>
       <span class="total-value" id="totalValue">0</span>
@@ -541,20 +524,17 @@
   </footer>
 
   <script>
-    // State
     let rows = [];
     let nextId = 1;
-    let sortBy = 'added'; // 'added' | 'alpha' | 'value'
-    let sortOrder = 'desc'; // 'asc' | 'desc'
+    let sortBy = 'added';
+    let sortOrder = 'desc';
 
-    // DOM References (initialized after DOM ready)
     let rowsContainer = null;
     let totalValueEl = null;
     let addBtn = null;
     let sortSelect = null;
     let orderToggle = null;
 
-    // Storage helpers
     const STORAGE_KEY = 'sum-it-rows';
     
     function saveState() {
@@ -566,7 +546,7 @@
           sortOrder 
         }));
       } catch (e) {
-        // Storage unavailable, continue without persistence
+        // Storage unavailable
       }
     }
 
@@ -593,7 +573,6 @@
       }
     }
 
-    // Safe math expression evaluator
     function evaluateMath(expression) {
       if (!expression || expression.trim() === '') {
         return { value: 0, error: false };
@@ -627,7 +606,6 @@
       }
     }
 
-    // Format number for display
     function formatNumber(num) {
       if (Math.abs(num) >= 1000000) {
         return num.toExponential(2);
@@ -635,7 +613,6 @@
       return parseFloat(num.toFixed(4)).toLocaleString('en-US', { maximumFractionDigits: 4 });
     }
 
-    // Calculate total
     function calculateTotal() {
       return rows.reduce((sum, row) => {
         const result = evaluateMath(row.math);
@@ -643,7 +620,6 @@
       }, 0);
     }
 
-    // Sort rows based on current settings
     function getSortedRows() {
       const sorted = [...rows];
       const dir = sortOrder === 'asc' ? 1 : -1;
@@ -674,7 +650,6 @@
       return sorted;
     }
 
-    // Update order toggle button UI
     function updateOrderToggleUI() {
       if (!orderToggle) return;
       
@@ -687,7 +662,6 @@
       }
     }
 
-    // Render empty state
     function renderEmptyState() {
       return `
         <div class="empty-state">
@@ -702,7 +676,6 @@
       `;
     }
 
-    // Render single row HTML
     function renderRow(row, index) {
       const result = evaluateMath(row.math);
       const errorClass = result.error && row.math ? 'visible' : '';
@@ -719,6 +692,10 @@
                 placeholder="e.g. Groceries"
                 value="${escapeHtml(row.comment)}"
                 data-field="comment"
+                autocomplete="off"
+                autocapitalize="sentences"
+                spellcheck="true"
+                enterkeyhint="next"
                 aria-describedby="math-error-${row.id}"
               />
             </div>
@@ -732,6 +709,10 @@
                 value="${escapeHtml(row.math)}"
                 data-field="math"
                 inputmode="text"
+                autocomplete="off"
+                autocapitalize="none"
+                spellcheck="false"
+                enterkeyhint="done"
                 aria-describedby="math-error-${row.id}"
               />
               <span class="math-error ${errorClass}" id="math-error-${row.id}">Invalid expression</span>
@@ -750,14 +731,12 @@
       `;
     }
 
-    // Escape HTML to prevent XSS
     function escapeHtml(str) {
       const div = document.createElement('div');
       div.textContent = str || '';
       return div.innerHTML;
     }
 
-    // Render all rows
     function render() {
       if (!rowsContainer || !totalValueEl) return;
 
@@ -772,7 +751,6 @@
       totalValueEl.textContent = formatNumber(calculateTotal());
     }
 
-    // Add new row
     function addRow() {
       const newRow = {
         id: nextId++,
@@ -794,14 +772,12 @@
       }
     }
 
-    // Delete row
     function deleteRow(id) {
       rows = rows.filter(row => row.id !== id);
       saveState();
       render();
     }
 
-    // Update row field
     function updateRow(id, field, value) {
       const row = rows.find(r => r.id === id);
       if (row) {
@@ -827,7 +803,30 @@
       }
     }
 
-    // Handle sort change
+    // Handle keyboard navigation between fields
+    function handleKeyDown(e) {
+      // Only handle Enter key
+      if (e.key !== 'Enter') return;
+      
+      // In comment field: move focus to math field
+      if (e.target.classList.contains('comment-input')) {
+        e.preventDefault();
+        const row = e.target.closest('.row');
+        if (row) {
+          const mathInput = row.querySelector('.math-input');
+          if (mathInput) {
+            mathInput.focus();
+          }
+        }
+      }
+      
+      // In math field: blur to close keyboard (Done action)
+      else if (e.target.classList.contains('math-input')) {
+        e.preventDefault();
+        e.target.blur();
+      }
+    }
+
     function handleSortChange(e) {
       sortBy = e.target.value;
       updateOrderToggleUI();
@@ -835,7 +834,6 @@
       render();
     }
 
-    // Handle order toggle
     function handleOrderToggle() {
       sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
       updateOrderToggleUI();
@@ -843,7 +841,6 @@
       render();
     }
 
-    // Event handlers
     function handleContainerClick(e) {
       const deleteBtn = e.target.closest('[data-action="delete"]');
       if (deleteBtn) {
@@ -866,9 +863,7 @@
       }
     }
 
-    // Initialize app
     function init() {
-      // Get DOM references
       rowsContainer = document.getElementById('rowsContainer');
       totalValueEl = document.getElementById('totalValue');
       addBtn = document.getElementById('addBtn');
@@ -882,10 +877,10 @@
 
       loadState();
 
-      // Attach event listeners
       addBtn.addEventListener('click', addRow);
       rowsContainer.addEventListener('click', handleContainerClick);
       rowsContainer.addEventListener('input', handleContainerInput);
+      rowsContainer.addEventListener('keydown', handleKeyDown);
       
       if (sortSelect) {
         sortSelect.addEventListener('change', handleSortChange);
@@ -898,7 +893,6 @@
       render();
     }
 
-    // Start app when DOM is ready
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', init);
     } else {
